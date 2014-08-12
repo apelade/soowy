@@ -1,8 +1,13 @@
 #!/usr/bin/env ruby
 
-# TODO 1 needs a regex, allow user to provide
+# TODO 1 replace SPLIT_ON with regex, allow user to provide
+# TODO rescue exceptions and ARGV.delete file
 # TODO option parser
 # TODO trap SIG_INT and print results so far, then exit
+# TODO check:
+  # does array subtraction benefit from sorted?
+  # non-in-place ary methods faster for short-line case?
+# TODO may need to chunk if run on single-line files, eg compiled css
 
 SPLIT_ON = " "
 
@@ -17,17 +22,12 @@ find -type f -name test\\*.txt | xargs ruby soowy.rb
 unique = []
 
 ARGV.each do |file|
-  raise "file not found: ${file}" unless File.exists? file rescue ARGV.delete(file)
-  raise "file not readable: ${file}" unless File.readable? file  rescue ARGV.delete(file)
-#  puts "Process file: #{file}"
+  raise "file not found: ${file}" unless File.exists? file
+  raise "file not readable: ${file}" unless File.readable? file
   # find unique words from each file
   singles = []
   open(file) do |text|
     text.each_line do |line|
-      # may need to chunk if run on single-line files, eg compiled css
-      # does array subtraction benefit from sorted?
-      # non-in-place ary methods faster for short-line case?
-
       words = line.split(SPLIT_ON).uniq.sort
       # XOR arrays
       singles = (singles - words) + (words - singles)
