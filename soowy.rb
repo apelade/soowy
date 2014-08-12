@@ -34,10 +34,6 @@ ARGV.each do |file|
       singles.sort!
     end
   end
-#  puts
-#  puts "unique to #{file}:\n"
-#  print singles
-#  puts
   unique = (unique - singles) + (singles - unique)
   unique.sort!
 end
