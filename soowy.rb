@@ -6,32 +6,59 @@
 # TODO trap SIG_INT and print results so far, then exit
 # TODO check:
   # does array subtraction benefit from sorted?
-  # non-in-place ary methods faster for short-line case?
+  # non-in-place ary methods faster for short-line low-memory case?
 # TODO may need to chunk if run on single-line files, eg compiled css
+require 'optparse'
 
-SPLIT_ON = " "
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: example.rb [options]"
 
-fail """
+  options[:regex] = ""
+  options[:files] = []
+  options[:verbose] = false
+  opts.banner =
+"""
 Usage:
 ruby soowy.rb file file..
-or pipe from find:
-find -type f -name test\\*.txt | xargs ruby soowy.rb
-""" if ARGV.empty?
+or pipe command:
+find path/to/scss -type f -name test\\*.txt | xargs ruby soowy.rb
+"""
 
+  opts.on("-r", "--regex /REGEX/", "regex used to match candidates") do |regex|
+    options[:regex] << regex
+  end
+
+  opts.on("-f", "--files file1,file2 ..", Array, "file list to search") do |files|
+    options[:files] = files
+  end
+
+  opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+    options[:verbose] = v
+  end
+
+end.parse!
 
 unique = []
 
-ARGV.each do |file|
+options[:files].each do |file|
   raise "file not found: ${file}" unless File.exists? file
   raise "file not readable: ${file}" unless File.readable? file
   # find unique words from each file
   singles = []
   open(file) do |text|
     text.each_line do |line|
-      words = line.split(SPLIT_ON).uniq.sort
-      # XOR arrays
-      singles = (singles - words) + (words - singles)
-      singles.sort!
+      unless line.nil? || line.match(options[:regex]).nil?
+        words = line =~ (options[:regex]).uniq.sort
+        # XOR arrays
+        singles = (singles - words) + (words - singles)
+        singles.sort!
+        if options[:verbose]
+          puts "result for file #{file}:"
+          print singles.flatten
+          print ''
+        end
+      end
     end
   end
   unique = (unique - singles) + (singles - unique)
