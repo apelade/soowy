@@ -1,5 +1,4 @@
 #!/usr/bin/env ruby
-# TODO 1 allow giving unquoted regex
 # TODO map reduce
 # TODO rescue exceptions and report sep category for unavailable files?
 # TODO trap SIG_INT and print results so far, then exit
@@ -14,12 +13,10 @@ Usage:
 Example:
   ruby soowy.rb -r \'\\w.*\\w\' -f test1.txt test2.txt -v
 Example piping from shell command:
-  find . -type f -name test\\*.txt | xargs ruby soowy.rb -r '\\w.*\\w' -f
+  find ../websiteone/app/assets/stylesheets/ -type f -name *.scss | xargs ruby soowy.rb -r '\\A\.\\w.*\\w' -v
   """
 
 require 'optparse'
-require 'to_regexp'
-require 'byebug'
 options = {}
 OptionParser.new(usage) do |opts|
   DEFAULT_REGEX = /\w.*\w/
@@ -31,13 +28,12 @@ OptionParser.new(usage) do |opts|
       options[:regex] = regex
     rescue RegexpError
       puts "Error creating regular expression from #{regex}"
+      exit! 1
     end
   end
   opts.on("-v", "--[no-]verbose", "run verbosely") do |v|
     options[:verbose] = v
   end
-  opts.banner = usage
-
   opts.parse!
   # anything left over is assumed to be a file name
   options[:files] = ARGV
@@ -46,8 +42,8 @@ end.parse!
 using_default = "Using Default " if options[:regex] == DEFAULT_REGEX
 puts using_default.to_s + "Regex : #{options[:regex].to_s}" if using_default || options[:verbose]
 
-unique = []
 # find unique words from each file
+unique = []
 options[:files].each do |file|
   raise "file not found: ${file}" unless File.exists? file
   raise "file not readable: ${file}" unless File.readable? file
