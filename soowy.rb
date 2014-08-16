@@ -8,13 +8,13 @@
 # TODO may need to chunk if run on single-line files, eg compiled css
 
 usage = """
-Usage:
-  ruby soowy.rb -r \'inner_regex\' -f file file --verbose
+Usage: Find strings that occur only once among a set of files
+  ruby soowy.rb -r \'inner_regex\' file file --verbose
 Example:
-  ruby soowy.rb -r \'\\w.*\\w\' -f test1.txt test2.txt -v
+  ruby soowy.rb -r \'\\w.*\\w\' test1.txt test2.txt -v
 Example piping from shell command:
-  find ../websiteone/app/assets/stylesheets/ -type f -name *.scss | xargs ruby soowy.rb -r '\\A\.\\w.*\\w' -v
-  """
+  find ../websiteone/app/assets/stylesheets/ -type f -name *.scss | xargs ruby soowy.rb -r '\\A\\.\\w.*\\w {' -v
+"""
 
 require 'optparse'
 options = {}
@@ -37,7 +37,7 @@ OptionParser.new(usage) do |opts|
   opts.parse!
   # anything left over is assumed to be a file name
   options[:files] = ARGV
-  puts opts if options[:files].empty?
+  fail opts.to_s if options[:files].empty?
 end.parse!
 using_default = "Using Default " if options[:regex] == DEFAULT_REGEX
 puts using_default.to_s + "Regex : #{options[:regex].to_s}" if using_default || options[:verbose]
