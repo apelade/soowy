@@ -11,13 +11,13 @@ class Soowy
 
   def self.usage
     "" "
-  Usage: Find strings that occur only once in a set of files
-    ruby soowy.rb -r \'inner_regex\' file file --verbose
-  Example:
-    ruby soowy.rb -r \'\\w.*\\w\' test1.txt test2.txt -v
-  Example piping from shell command:
-    find ../websiteone/app/assets/stylesheets/ -type f -name *.scss | xargs ruby soowy.rb -r '\\A\\.\\w.*\\w {'
-  " ""
+    Usage: Find strings that occur only once in a set of files
+      ruby soowy.rb -r \'inner_regex\' file file --verbose
+    Example:
+      ruby soowy.rb -r \'\\w.*\\w\' test1.txt test2.txt -v
+    Example piping from shell command:
+      find ../websiteone/app/assets/stylesheets/ -type f -name *.scss | xargs ruby soowy.rb -r '\\A\\.\\w.*\\w {'
+    " ""
   end
 
   def self.parse_opts(usage)
@@ -54,7 +54,8 @@ class Soowy
       singles = []
       open(file) do |text|
         text.each_line do |line|
-          words = line.scan regex
+          words = line.scan(regex)
+          words = words.keep_if {|word| words.count(word) == 1}
           # XOR arrays
           singles = (singles - words) + (words - singles)
           singles.sort!
@@ -78,6 +79,6 @@ class Soowy
 end # end class Soowy
 
 options = Soowy.parse_opts(Soowy.usage())
-unique  = Soowy.find_unique(options[:regex], options[:files], options[:verbose])
+unique = Soowy.find_unique(options[:regex], options[:files], options[:verbose])
 puts Soowy.format_result(unique, options[:files], options[:verbose])
 
