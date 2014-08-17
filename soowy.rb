@@ -1,8 +1,4 @@
 #!/usr/bin/env ruby
-# TODO check:
-# does array subtraction benefit from sorted?
-# non-in-place ary methods faster for short-line low-memory case?
-# need to chunk if run on single-line files, eg compiled css
 
 require 'optparse'
 
@@ -52,28 +48,22 @@ class Soowy
       raise "file not found: ${file}" unless File.exists? file
       raise "file not readable: ${file}" unless File.readable? file
       singles = []
-      open(file) do |text|
-        text.each_line do |line|
-          words = line.scan(regex)
-          words = words.keep_if {|word| words.count(word) == 1}
-          # XOR arrays
-          singles = (singles - words) + (words - singles)
-          singles.sort!
-        end
+      File.open(file, 'rb') do |fobj|
+        string = fobj.read
+        words = string.scan(regex)
+        words = words.keep_if {|word| words.count(word) == 1}
+        # XOR arrays. Unsorted is fine; if needed it's done in underlying C.
+        singles = (singles - words) + (words - singles)
         puts "result for file #{file}:", singles.flatten if verbose
       end
       unique = (unique - singles) + (singles - unique)
-      unique.sort!
     end
-    unique
   end
 
   def self.format_result(unique, files, verbose)
-    if verbose
-      "unique across files #{files.join(" ")} : #{unique}"
-    else
-      unique
-    end
+    unique.sort!
+    return unique unless verbose
+    "unique across files #{files.join(" ")} : #{unique}"
   end
 
 end # end class Soowy
